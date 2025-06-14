@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="description" content="Temukan hari baik berdasarkan Wariga Bali untuk berbagai keperluan adat seperti pernikahan, mecaru, metatah, dan lainnya. Cek 3 hari baik terdekat untuk upacara penting Anda." />
+  <meta name="description" content="Temukan hari baik berdasarkan Wariga Bali untuk berbagai keperluan adat seperti pernikahan, mecaru, metatah, dan lainnya. Cek 7 hari baik terdekat untuk upacara penting Anda." />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cek Hari Baik Wariga Bali - Kalender Adat Bali</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -20,9 +20,13 @@
       <option value="usaha">Hari Baik untuk Memulai Usaha</option>
     </select>
 
-    <button onclick="cariHariBaik()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Cari 3 Hari Baik Terdekat</button>
+    <button onclick="cariHariBaik()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Cari 7 Hari Baik Terdekat</button>
 
     <div id="hasil" class="mt-6 text-gray-800 text-sm"></div>
+
+    <p class="text-xs text-gray-500 mt-4">
+      <strong>Disclaimer:</strong> Perhitungan ini berdasarkan perhitungan umum Wariga Bali dan mungkin tidak sepenuhnya akurat. Sangat disarankan untuk berkonsultasi dengan pemangku atau pemimpin adat setempat, karena setiap desa di Bali memiliki aturan dan tradisi yang berbeda.
+    </p>
 
     <p class="text-center text-xs text-gray-500 mt-6">
       a tiny project by <a href="https://idearik.com" class="text-blue-500 hover:underline" target="_blank">@idearik</a>
@@ -30,7 +34,7 @@
   </div>
 
   <script>
-    const pawukonStart = new Date("2024-01-14"); // Hari Redite Sinta, awal pawukon
+    const pawukonStart = new Date("2024-01-14");
     const uripPanca = { "Umanis": 5, "Paing": 9, "Pon": 7, "Wage": 4, "Kliwon": 8 };
     const uripSapta = { "Redite": 5, "Soma": 4, "Anggara": 3, "Budha": 7, "Wraspati": 8, "Sukra": 6, "Saniscara": 9 };
     const saptaList = ["Redite", "Soma", "Anggara", "Budha", "Wraspati", "Sukra", "Saniscara"];
@@ -41,17 +45,28 @@
       const sapta = saptaList[date.getDay()];
       const panca = pancaList[daysSinceStart % 5];
       const uripTotal = uripSapta[sapta] + uripPanca[panca];
-      return { tanggal: date.toLocaleDateString("id-ID"), sapta, panca, uripTotal };
+      const wuku = (Math.floor(daysSinceStart / 7) % 30) + 1;
+      const triWara = (wuku * 7 + date.getDay()) % 3; // 0=Pasah, 1=Beteng, 2=Kajeng
+      const sangaWara = (wuku * 7 + date.getDay()) % 9;
+      const sadWara = (wuku * 7 + date.getDay()) % 6;
+      const asthaWara = (wuku * 7 + date.getDay()) % 8;
+      const dasaWara = (uripTotal + 1) % 10;
+      return { tanggal: date.toLocaleDateString("id-ID"), sapta, panca, uripTotal, wuku, triWara, sangaWara, sadWara, asthaWara, dasaWara };
     }
 
     function isHariBaik(tujuan, hari) {
       switch (tujuan) {
-        case "pernikahan": return [13, 14, 15].includes(hari.uripTotal);
-        case "mecaru": return [8, 9, 10].includes(hari.uripTotal);
-        case "metatah": return [11, 12, 13].includes(hari.uripTotal);
-        case "perjalanan": return [9, 10, 11].includes(hari.uripTotal);
-        case "usaha": return [14, 15, 16].includes(hari.uripTotal);
-        default: return false;
+        case "pernikahan":
+        case "metatah":
+          return [1, 2].includes(hari.triWara) && [7, 8].includes(hari.sangaWara) && [4, 5].includes(hari.sadWara) && [2, 4].includes(hari.asthaWara);
+        case "mecaru":
+          return [0].includes(hari.triWara) && [5, 6].includes(hari.sangaWara) && [0, 1].includes(hari.sadWara) && [6, 7].includes(hari.asthaWara);
+        case "perjalanan":
+          return [1].includes(hari.triWara) && [3, 4].includes(hari.sangaWara) && [2, 5].includes(hari.sadWara) && [1, 2].includes(hari.asthaWara);
+        case "usaha":
+          return [2].includes(hari.triWara) && [0, 1, 2].includes(hari.sangaWara) && [4, 5].includes(hari.sadWara) && [0, 3].includes(hari.asthaWara);
+        default:
+          return false;
       }
     }
 
@@ -62,7 +77,7 @@
       let hariKe = 0;
       const now = new Date();
 
-      while (hariBaik.length < 3 && hariKe < 60) {
+      while (hariBaik.length < 7 && hariKe < 120) {
         const cekTanggal = new Date();
         cekTanggal.setDate(now.getDate() + hariKe);
         const infoHari = getHariData(cekTanggal);
@@ -71,11 +86,11 @@
       }
 
       if (hariBaik.length === 0) {
-        hasilEl.innerHTML = `<p>Tidak ditemukan hari baik dalam 60 hari ke depan.</p>`;
+        hasilEl.innerHTML = `<p>Tidak ditemukan hari baik dalam 120 hari ke depan.</p>`;
         return;
       }
 
-      let html = "<p><strong>Hari Baik Terdekat:</strong></p><ul class='list-disc pl-4'>";
+      let html = "<p><strong>7 Hari Baik Terdekat:</strong></p><ul class='list-disc pl-4'>";
       hariBaik.forEach(h => {
         html += `<li>${h.tanggal} - ${h.sapta} ${h.panca} (Urip: ${h.uripTotal})</li>`;
       });
