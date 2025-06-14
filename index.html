@@ -1,18 +1,26 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Cek hari baik berdasarkan kalender Wariga Bali. Menentukan hari ayu untuk usaha, upacara, atau kegiatan penting lainnya dengan perhitungan Wuku, Sapta Wara, dan Panca Wara.">
-  <title>Cek Hari Baik Wariga Bali</title>
+  <meta charset="UTF-8" />
+  <meta name="description" content="Temukan hari baik berdasarkan Wariga Bali untuk berbagai keperluan adat seperti pernikahan, mecaru, metatah, dan lainnya. Cek 3 hari baik terdekat untuk upacara penting Anda." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cek Hari Baik Wariga Bali - Kalender Adat Bali</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50 p-6 font-sans">
   <div class="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md">
     <h1 class="text-2xl font-bold mb-4">Cek Hari Baik Wariga Bali</h1>
-    <label class="block mb-2">Pilih Tanggal</label>
-    <input type="date" id="tanggal" class="w-full p-2 border mb-4 rounded">
-    <button onclick="cekHariBaik()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Cek Hari Baik</button>
+
+    <label class="block mb-2">Pilih Tujuan Anda</label>
+    <select id="tujuan" class="w-full p-2 border mb-4 rounded">
+      <option value="pernikahan">Hari Baik untuk Pernikahan</option>
+      <option value="mecaru">Hari Baik untuk Mecaru (Bhuta Yadnya)</option>
+      <option value="metatah">Hari Baik untuk Metatah (Potong Gigi)</option>
+      <option value="perjalanan">Hari Baik untuk Melakukan Perjalanan</option>
+      <option value="usaha">Hari Baik untuk Memulai Usaha</option>
+    </select>
+
+    <button onclick="cariHariBaik()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Cari 3 Hari Baik Terdekat</button>
 
     <div id="hasil" class="mt-6 text-gray-800 text-sm"></div>
 
@@ -22,42 +30,57 @@
   </div>
 
   <script>
-    const saptaWara = ["Redite", "Soma", "Anggara", "Budha", "Wraspati", "Sukra", "Saniscara"];
-    const pancaWara = ["Umanis", "Paing", "Pon", "Wage", "Kliwon"];
+    const pawukonStart = new Date("2024-01-14"); // Hari Redite Sinta, awal pawukon
+    const uripPanca = { "Umanis": 5, "Paing": 9, "Pon": 7, "Wage": 4, "Kliwon": 8 };
+    const uripSapta = { "Redite": 5, "Soma": 4, "Anggara": 3, "Budha": 7, "Wraspati": 8, "Sukra": 6, "Saniscara": 9 };
+    const saptaList = ["Redite", "Soma", "Anggara", "Budha", "Wraspati", "Sukra", "Saniscara"];
+    const pancaList = ["Umanis", "Paing", "Pon", "Wage", "Kliwon"];
 
-    const uripSapta = [5, 4, 3, 7, 8, 6, 9];
-    const uripPanca = [5, 9, 7, 4, 8];
-
-    function getWukuNumber(date) {
-      const baseDate = new Date("2023-01-01"); // Hari Redite Pahing Sinta
-      const selisihHari = Math.floor((date - baseDate) / (1000 * 60 * 60 * 24));
-      return (selisihHari % 210 + 210) % 210; // selalu positif
+    function getHariData(date) {
+      const daysSinceStart = Math.floor((date - pawukonStart) / (1000 * 60 * 60 * 24));
+      const sapta = saptaList[date.getDay()];
+      const panca = pancaList[daysSinceStart % 5];
+      const uripTotal = uripSapta[sapta] + uripPanca[panca];
+      return { tanggal: date.toLocaleDateString("id-ID"), sapta, panca, uripTotal };
     }
 
-    function cekHariBaik() {
-      const inputDate = new Date(document.getElementById("tanggal").value);
-      if (isNaN(inputDate)) {
-        document.getElementById("hasil").innerHTML = "<p>Mohon masukkan tanggal yang valid.</p>";
+    function isHariBaik(tujuan, hari) {
+      switch (tujuan) {
+        case "pernikahan": return [13, 14, 15].includes(hari.uripTotal);
+        case "mecaru": return [8, 9, 10].includes(hari.uripTotal);
+        case "metatah": return [11, 12, 13].includes(hari.uripTotal);
+        case "perjalanan": return [9, 10, 11].includes(hari.uripTotal);
+        case "usaha": return [14, 15, 16].includes(hari.uripTotal);
+        default: return false;
+      }
+    }
+
+    function cariHariBaik() {
+      const tujuan = document.getElementById("tujuan").value;
+      const hasilEl = document.getElementById("hasil");
+      let hariBaik = [];
+      let hariKe = 0;
+      const now = new Date();
+
+      while (hariBaik.length < 3 && hariKe < 60) {
+        const cekTanggal = new Date();
+        cekTanggal.setDate(now.getDate() + hariKe);
+        const infoHari = getHariData(cekTanggal);
+        if (isHariBaik(tujuan, infoHari)) hariBaik.push(infoHari);
+        hariKe++;
+      }
+
+      if (hariBaik.length === 0) {
+        hasilEl.innerHTML = `<p>Tidak ditemukan hari baik dalam 60 hari ke depan.</p>`;
         return;
       }
 
-      const wukuIndex = Math.floor(getWukuNumber(inputDate) / 7);
-      const saptaIndex = inputDate.getDay();
-      const pancaIndex = getWukuNumber(inputDate) % 5;
-
-      const uripTotal = uripSapta[saptaIndex] + uripPanca[pancaIndex];
-      const triwara = ["Pasah", "Beteng", "Kajeng"][(getWukuNumber(inputDate)) % 3];
-      const sangawara = ["Dangu", "Jangur", "Gigis", "Nohan", "Ogan", "Erangan", "Urungan", "Tulus", "Dadi"][(getWukuNumber(inputDate)) % 9];
-
-      document.getElementById("hasil").innerHTML = `
-        <p><strong>Tanggal:</strong> ${inputDate.toLocaleDateString("id-ID")}</p>
-        <p><strong>Wuku ke-:</strong> ${wukuIndex + 1}</p>
-        <p><strong>Sapta Wara:</strong> ${saptaWara[saptaIndex]} (Urip ${uripSapta[saptaIndex]})</p>
-        <p><strong>Panca Wara:</strong> ${pancaWara[pancaIndex]} (Urip ${uripPanca[pancaIndex]})</p>
-        <p><strong>Jumlah Urip:</strong> ${uripTotal}</p>
-        <p><strong>Tri Wara:</strong> ${triwara}</p>
-        <p><strong>Sanga Wara:</strong> ${sangawara}</p>
-      `;
+      let html = "<p><strong>Hari Baik Terdekat:</strong></p><ul class='list-disc pl-4'>";
+      hariBaik.forEach(h => {
+        html += `<li>${h.tanggal} - ${h.sapta} ${h.panca} (Urip: ${h.uripTotal})</li>`;
+      });
+      html += "</ul>";
+      hasilEl.innerHTML = html;
     }
   </script>
 </body>
