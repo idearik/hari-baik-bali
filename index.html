@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cek hari baik berdasarkan kalender Wariga Bali. Menentukan hari ayu untuk usaha, upacara, atau kegiatan penting lainnya dengan perhitungan Wuku, Sapta Wara, dan Panca Wara.">
+  <title>Cek Hari Baik Wariga Bali</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 p-6 font-sans">
+  <div class="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-4">Cek Hari Baik Wariga Bali</h1>
+    <label class="block mb-2">Pilih Tanggal</label>
+    <input type="date" id="tanggal" class="w-full p-2 border mb-4 rounded">
+    <button onclick="cekHariBaik()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Cek Hari Baik</button>
+
+    <div id="hasil" class="mt-6 text-gray-800 text-sm"></div>
+
+    <p class="text-center text-xs text-gray-500 mt-6">
+      a tiny project by <a href="https://idearik.com" class="text-blue-500 hover:underline" target="_blank">@idearik</a>
+    </p>
+  </div>
+
+  <script>
+    const saptaWara = ["Redite", "Soma", "Anggara", "Budha", "Wraspati", "Sukra", "Saniscara"];
+    const pancaWara = ["Umanis", "Paing", "Pon", "Wage", "Kliwon"];
+
+    const uripSapta = [5, 4, 3, 7, 8, 6, 9];
+    const uripPanca = [5, 9, 7, 4, 8];
+
+    function getWukuNumber(date) {
+      const baseDate = new Date("2023-01-01"); // Hari Redite Pahing Sinta
+      const selisihHari = Math.floor((date - baseDate) / (1000 * 60 * 60 * 24));
+      return (selisihHari % 210 + 210) % 210; // selalu positif
+    }
+
+    function cekHariBaik() {
+      const inputDate = new Date(document.getElementById("tanggal").value);
+      if (isNaN(inputDate)) {
+        document.getElementById("hasil").innerHTML = "<p>Mohon masukkan tanggal yang valid.</p>";
+        return;
+      }
+
+      const wukuIndex = Math.floor(getWukuNumber(inputDate) / 7);
+      const saptaIndex = inputDate.getDay();
+      const pancaIndex = getWukuNumber(inputDate) % 5;
+
+      const uripTotal = uripSapta[saptaIndex] + uripPanca[pancaIndex];
+      const triwara = ["Pasah", "Beteng", "Kajeng"][(getWukuNumber(inputDate)) % 3];
+      const sangawara = ["Dangu", "Jangur", "Gigis", "Nohan", "Ogan", "Erangan", "Urungan", "Tulus", "Dadi"][(getWukuNumber(inputDate)) % 9];
+
+      document.getElementById("hasil").innerHTML = `
+        <p><strong>Tanggal:</strong> ${inputDate.toLocaleDateString("id-ID")}</p>
+        <p><strong>Wuku ke-:</strong> ${wukuIndex + 1}</p>
+        <p><strong>Sapta Wara:</strong> ${saptaWara[saptaIndex]} (Urip ${uripSapta[saptaIndex]})</p>
+        <p><strong>Panca Wara:</strong> ${pancaWara[pancaIndex]} (Urip ${uripPanca[pancaIndex]})</p>
+        <p><strong>Jumlah Urip:</strong> ${uripTotal}</p>
+        <p><strong>Tri Wara:</strong> ${triwara}</p>
+        <p><strong>Sanga Wara:</strong> ${sangawara}</p>
+      `;
+    }
+  </script>
+</body>
+</html>
